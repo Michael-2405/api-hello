@@ -15,7 +15,7 @@ func TestRoutes(t *testing.T) {
 		wantStatus 	int
 		wantMessage string
 	} {
-		{"root", http.MethodGet, "/", http.StatusOK, "Hello from Go API"},
+		{"root", http.MethodGet, "/", http.StatusOK, "Hello from Go API - My First Deployment"},
 		{"health", http.MethodGet, "/health", http.StatusOK, "OK"},
 		{"unknown path", http.MethodGet, "/nope", http.StatusNotFound, ""},
 		{"wrong method", http.MethodPost, "/health", http.StatusMethodNotAllowed, ""},

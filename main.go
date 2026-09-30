@@ -43,7 +43,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, "Hello from Go API")
+	writeJSON(w, http.StatusOK, "Hello from Go API - My First Deployment")
 }
 
 func main() {
