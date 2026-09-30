@@ -47,3 +47,44 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Deploy over SSH
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+      run: |
+        set -euo pipefail
+        IMAGE="ghcr.io/michael-2405/api-hello:sha-${GITHUB_SHA::7}"
+
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+        ssh -i ~/.ssh/deploy_key "ubuntu@$EC2_HOST" bash -s -- "$IMAGE" <<'EOF'
+        set -euo pipefail
+        IMAGE="$1"
+        docker pull "$IMAGE"
+        docker rm -f api-hello || true
+        docker run -d --name api-hello --restart unless-stopped -p 8080:8080 "$IMAGE"
+        EOF
+
+    - name: Health check
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+      run: |
+        for i in 1 2 3 4 5; do
+          curl -fsS "http://$EC2_HOST:8080/health" && exit 0
+          sleep 3
+        done
+        echo "health check failed"
+        exit 1
+        ~
