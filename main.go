@@ -31,6 +31,13 @@ func writeJSON(w http.ResponseWriter, status int, message string) {
 	}
 }
 
+func newMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /health", healthHandler)
+	mux.HandleFunc("GET /{$}", rootHandler)
+	return mux
+}
+
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, "OK")
 }
@@ -51,7 +58,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:              ":" + port,
-		Handler:           mux,
+		Handler:           newMux(),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,
